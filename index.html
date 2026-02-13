@@ -2,133 +2,217 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>SNT Авто-заказ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNT | Order Sheet</title>
+    <script src="data.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #eceff1; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        .status { padding: 10px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em; }
-        .status.loading { background: #fff3cd; color: #856404; }
-        .status.error { background: #f8d7da; color: #721c24; }
-        .status.success { background: #d4edda; color: #155724; }
+        :root {
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #f0f9ff;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header { margin-bottom: 32px; }
+        h1 { font-size: 24px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+        p { color: var(--text-muted); margin: 0; font-size: 14px; }
+
+        .search-container {
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+            margin-bottom: 24px;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #searchInput:focus { border-color: var(--primary); }
+
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #3498db; color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #f9f9f9; }
-        
-        input[type="number"] { width: 50px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
-        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        
-        .footer-total { position: fixed; bottom: 20px; right: 20px; background: #2c3e50; color: white; padding: 20px; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .total-price { font-size: 1.5em; color: #2ecc71; display: block; }
+        th { 
+            text-align: left; 
+            padding: 16px 20px; 
+            background: var(--bg); 
+            color: var(--text-muted); 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+        }
+
+        td { padding: 16px 20px; border-top: 1px solid var(--border); }
+
+        .name-cell { font-weight: 500; max-width: 400px; }
+        .price-retail { color: var(--text-muted); text-decoration: line-through; font-size: 12px; }
+        .price-wholesale { font-weight: 600; color: var(--text); }
+
+        input[type="number"] {
+            width: 50px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+
+        .summary-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 99px;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+        }
+
+        .summary-item { display: flex; flex-direction: column; }
+        .summary-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; }
+        .summary-value { font-size: 18px; font-weight: 700; color: #f8fafc; }
+        .highlight { color: #4ade80; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Лист заказа SNT</h2>
-    <div id="status" class="status loading">Поиск файла price.csv...</div>
-    
-    <input type="text" id="search" class="search-box" placeholder="Начните вводить название товара..." onkeyup="filterTable()">
+    <header>
+        <h1>SNT Store</h1>
+        <p id="dateDisplay"></p>
+    </header>
 
-    <table id="orderTable">
-        <thead>
-            <tr>
-                <th>Наименование</th>
-                <th>Розница</th>
-                <th>Опт</th>
-                <th>Кол-во</th>
-                <th>Итого</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Поиск по продукции..." onkeyup="filterTable()">
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Продукт</th>
+                    <th>Цена (Розн/Опт)</th>
+                    <th>Количество</th>
+                    <th>Итого</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </div>
 
-<div class="footer-total">
-    <span>Итого (Опт):</span>
-    <span id="grandTotal" class="total-price">0 ₽</span>
+<div class="summary-bar">
+    <div class="summary-item">
+        <span class="summary-label">Позиций</span>
+        <span id="totalItems" class="summary-value">0</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Сумма заказа</span>
+        <span id="totalPrice" class="summary-value highlight">0 ₽</span>
+    </div>
 </div>
 
 <script>
-    // Имя файла в той же директории
-    const CSV_FILE = 'price.csv'; 
-
-    async function loadCSV() {
-        const statusDiv = document.getElementById('status');
-        try {
-            const response = await fetch(CSV_FILE);
-            if (!response.ok) throw new Error('Файл price.csv не найден в папке');
-            
-            const data = await response.text();
-            renderTable(data);
-            
-            statusDiv.className = 'status success';
-            statusDiv.innerText = 'Прайс успешно загружен автоматически';
-        } catch (err) {
-            statusDiv.className = 'status error';
-            statusDiv.innerText = 'Ошибка: ' + err.message + '. Убедитесь, что используете локальный сервер (localhost).';
-        }
-    }
-
-    function renderTable(csvText) {
-        const rows = csvText.split('\n');
-        const tbody = document.getElementById('tableBody');
+    // Парсим данные из переменной в data.js
+    function init() {
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
         
-        rows.forEach(line => {
-            if (!line.trim()) return;
-            
-            // Разбивка по вашему формату (Название;Розница;Опт)
-            const cols = line.split(';');
-            if (cols.length < 3) return;
+        const lines = csvRawData.split('\n');
+        const tbody = document.getElementById('tableBody');
 
-            const name = cols[0].replace(/"/g, '');
-            const retail = cols[1];
-            const wholesale = cols[2];
+        lines.forEach(line => {
+            if (!line.trim()) return;
+            const parts = line.split(';');
+            if (parts.length < 3) return;
+
+            const name = parts[0].replace(/"/g, '');
+            const retail = parts[1];
+            const wholesale = parts[2];
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${name}</td>
-                <td>${retail}</td>
-                <td class="wholesale-val">${wholesale}</td>
-                <td><input type="number" min="0" value="0" oninput="updateRow(this)"></td>
-                <td class="row-total">0</td>
+                <td class="name-cell">${name}</td>
+                <td>
+                    <div class="price-retail">${retail} ₽</div>
+                    <div class="price-wholesale">${wholesale} ₽</div>
+                </td>
+                <td><input type="number" min="0" value="0" oninput="calculate()"></td>
+                <td class="row-total" style="font-weight:600">0</td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    function updateRow(input) {
-        const row = input.parentElement.parentElement;
-        const price = parseFloat(row.querySelector('.wholesale-val').innerText);
-        const qty = parseInt(input.value) || 0;
-        const total = row.querySelector('.row-total');
-        
-        total.innerText = (price * qty).toFixed(0);
-        calculateGrandTotal();
-    }
+    function calculate() {
+        let totalSum = 0;
+        let totalCount = 0;
+        const rows = document.querySelectorAll('#tableBody tr');
 
-    function calculateGrandTotal() {
-        let grandTotal = 0;
-        document.querySelectorAll('.row-total').forEach(td => {
-            grandTotal += parseFloat(td.innerText);
+        rows.forEach(row => {
+            const wholesale = parseFloat(row.querySelector('.price-wholesale').innerText);
+            const qty = parseInt(row.querySelector('input').value) || 0;
+            const rowTotal = row.querySelector('.row-total');
+            
+            const sum = wholesale * qty;
+            rowTotal.innerText = sum > 0 ? sum + ' ₽' : '0';
+            
+            if (qty > 0) {
+                totalSum += sum;
+                totalCount += qty;
+            }
         });
-        document.getElementById('grandTotal').innerText = grandTotal.toLocaleString() + ' ₽';
+
+        document.getElementById('totalPrice').innerText = totalSum.toLocaleString() + ' ₽';
+        document.getElementById('totalItems').innerText = totalCount;
     }
 
     function filterTable() {
-        const query = document.getElementById('search').value.toLowerCase();
+        const query = document.getElementById('searchInput').value.toLowerCase();
         const rows = document.querySelectorAll('#tableBody tr');
-        
         rows.forEach(row => {
-            const text = row.cells[0].innerText.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
+            const name = row.querySelector('.name-cell').innerText.toLowerCase();
+            row.style.display = name.includes(query) ? '' : 'none';
         });
     }
 
-    // Запуск при загрузке страницы
-    window.onload = loadCSV;
+    window.onload = init;
 </script>
 
 </body>
