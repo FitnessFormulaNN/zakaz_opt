@@ -3,86 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNT | Cloud Order System</title>
-    
+    <title>SNT | Order Sheet</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
+        /* Фикс прыжка контента */
+        html { scrollbar-gutter: stable; }
+
         :root {
             --primary: #000000;
             --text-main: #1a1a1a;
             --text-muted: #888888;
             --border: #eeeeee;
             --accent: #22c55e;
-            --bg-active: #fafafa;
         }
 
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px 20px 120px 20px; display: flex; justify-content: center; background: #fff; }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: #ffffff;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px 140px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
         .container { width: 100%; max-width: 900px; }
 
-        /* Шапка с ID заказа */
-        .session-header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 20px 0; border-bottom: 2px solid var(--primary); margin-bottom: 20px;
+        /* Шапка */
+        header { margin-bottom: 30px; }
+        .session-info { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .session-info input { 
+            width: 80px; padding: 8px; border: 1px solid var(--border); 
+            border-radius: 6px; font-weight: 700; text-align: center; outline: none;
         }
-        .order-id-wrapper { display: flex; align-items: center; gap: 10px; }
-        .order-id-wrapper input {
-            border: 1px solid var(--border); padding: 10px; border-radius: 8px;
-            width: 120px; font-weight: 800; font-size: 16px; text-align: center; outline: none;
-        }
-        .order-id-wrapper input:focus { border-color: var(--primary); }
 
-        /* Поиск и фильтр */
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        #search { flex-grow: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 16px; }
+        /* Поиск и кнопки */
+        .controls { display: flex; gap: 15px; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+        #search { flex-grow: 1; padding: 15px 0; border: none; font-size: 18px; outline: none; }
+        
         .filter-btn {
-            padding: 0 20px; border: 1px solid var(--border); border-radius: 8px;
-            background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;
+            background: none; border: 1px solid var(--border); padding: 8px 16px;
+            border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.2s;
         }
-        .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .filter-btn.active { background: var(--primary); color: #fff; }
 
         /* Таблица */
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 10px 0; }
-        td { padding: 15px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 15px 0; font-weight: 500; }
         
-        .product-info { display: flex; flex-direction: column; }
-        .p-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
-        .p-price { font-size: 13px; color: var(--text-muted); }
-        .p-wholesale { font-weight: 700; color: var(--primary); margin-left: 8px; }
+        /* Вертикальное выравнивание по центру */
+        td { padding: 20px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
+        .product-name { font-size: 15px; line-height: 1.4; padding-right: 20px; }
+        .prices { white-space: nowrap; width: 130px; }
+        .retail { font-size: 12px; color: var(--text-muted); text-decoration: line-through; display: block; }
+        .wholesale { font-weight: 600; font-size: 15px; }
+
+        /* Поле ввода: широкое и без стрелок */
         .qty-input {
-            width: 80px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
-            text-align: center; font-size: 18px; font-weight: 700; outline: none;
+            width: 90px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            text-align: center; font-size: 16px; font-weight: 600; outline: none;
+            -moz-appearance: textfield;
         }
-        .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        
-        .row-total { text-align: right; font-weight: 700; font-size: 16px; width: 120px; }
+        .qty-input::-webkit-outer-spin-button, 
+        .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .qty-input:focus { border-color: var(--primary); }
 
-        /* Футер */
+        .row-total { text-align: right; font-weight: 600; font-size: 15px; width: 120px; }
+
+        /* Панель итогов (Компактная и широкая) */
         .footer-panel {
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            background: var(--primary); color: white; width: 95%; max-width: 600px;
-            height: 70px; padding: 0 40px; border-radius: 100px;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: white;
+            width: 95%; max-width: 600px; height: 70px;
+            padding: 0 40px; border-radius: 100px;
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 100; box-sizing: border-box;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); z-index: 100; box-sizing: border-box;
         }
-        .stat-group { display: flex; align-items: baseline; gap: 8px; }
-        .stat-label { font-size: 11px; text-transform: uppercase; opacity: 0.7; }
+        .stat-group { display: flex; align-items: baseline; gap: 10px; }
+        .stat-label { font-size: 10px; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; }
         .stat-value { font-size: 22px; font-weight: 700; }
-        .accent-color { color: var(--accent); }
+        .total-highlight { color: var(--accent); }
 
-        /* Статус */
+        /* Статус синхронизации */
         #syncStatus {
-            position: fixed; top: 10px; right: 10px; padding: 5px 12px;
-            border-radius: 20px; font-size: 11px; font-weight: 600; display: none;
+            position: fixed; top: 15px; right: 15px; font-size: 11px;
+            padding: 6px 12px; border-radius: 20px; display: none;
         }
-        .status-sync { display: block; background: #fff8e1; color: #b78103; }
-        .status-ok { display: block; background: #e8f5e9; color: #2e7d32; }
+        .sync-active { display: block; background: #fff8e1; color: #b78103; }
+        .sync-success { display: block; background: #e8f5e9; color: #2e7d32; }
 
         .hidden { display: none !important; }
-        tr.active-row { background: var(--bg-active); }
+        tr.active-row { background-color: #fafafa; }
     </style>
 </head>
 <body>
@@ -90,24 +104,25 @@
 <div id="syncStatus"></div>
 
 <div class="container">
-    <div class="session-header">
-        <h1>SNT Заказ</h1>
-        <div class="order-id-wrapper">
-            <span style="font-size: 12px; font-weight: 600;">№ ЗАКАЗА:</span>
-            <input type="text" id="orderId" value="1" onchange="switchOrder(this.value)">
+    <header>
+        <div class="session-info">
+            <span style="font-size: 12px;">ID ЗАКАЗА:</span>
+            <input type="text" id="orderId" value="1" onchange="changeOrder(this.value)">
         </div>
+        <h1>SNT Order List</h1>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="search" placeholder="Поиск товара..." onkeyup="runFilters()">
+        <button id="filledBtn" class="filter-btn" onclick="toggleFilled()">Показать заполненные</button>
     </div>
 
-    <div class="search-bar">
-        <input type="text" id="search" placeholder="Поиск по названию..." onkeyup="filter()">
-        <button id="filterBtn" class="filter-btn" onclick="toggleFilter()">Выбранные</button>
-    </div>
-
-    <table id="productsTable">
+    <table id="mainTable">
         <thead>
             <tr>
-                <th>Товар / Цена</th>
-                <th style="text-align: center;">Кол-во</th>
+                <th>Наименование</th>
+                <th>Цена (Р/О)</th>
+                <th style="text-align: center;">Количество</th>
                 <th style="text-align: right;">Итого</th>
             </tr>
         </thead>
@@ -118,11 +133,11 @@
 <div class="footer-panel">
     <div class="stat-group">
         <span class="stat-label">Позиций:</span>
-        <span id="totalItems" class="stat-value">0</span>
+        <span id="totalCount" class="stat-value">0</span>
     </div>
     <div class="stat-group">
-        <span class="stat-label">Итого:</span>
-        <span id="totalPrice" class="stat-value accent-color">0 ₽</span>
+        <span class="stat-label">Сумма:</span>
+        <span id="totalSum" class="stat-value total-highlight">0 ₽</span>
     </div>
 </div>
 
@@ -140,132 +155,111 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let currentId = "1";
-    let isOnlySelected = false;
-    let saveDebounce;
+    let currentOrderId = "1";
+    let isFilterActive = false;
+    let timer;
 
-    // 1. Загрузка структуры товаров
-    async function loadApp() {
-        try {
-            const response = await fetch('products.json');
-            const products = await response.json();
-            const tbody = document.getElementById('tableBody');
+    async function load() {
+        const res = await fetch('products.json');
+        const data = await res.json();
+        const tbody = document.getElementById('tableBody');
 
-            tbody.innerHTML = products.map(p => `
-                <tr data-id="${p.id}" data-wholesale="${p.wholesale}">
-                    <td>
-                        <div class="product-info">
-                            <span class="p-name">${p.name}</span>
-                            <span class="p-price">Р: ${p.retail} ₽ <span class="p-wholesale">О: ${p.wholesale} ₽</span></span>
-                        </div>
-                    </td>
-                    <td align="center">
-                        <input type="number" class="qty-input" placeholder="0" oninput="handleInput(this)">
-                    </td>
-                    <td class="row-total">0 ₽</td>
-                </tr>
-            `).join('');
+        tbody.innerHTML = data.map(p => `
+            <tr data-id="${p.id}" data-wholesale="${p.wholesale}">
+                <td class="product-name">${p.name}</td>
+                <td class="prices">
+                    <span class="retail">${p.retail} ₽</span>
+                    <span class="wholesale">${p.wholesale} ₽</span>
+                </td>
+                <td align="center">
+                    <input type="number" class="qty-input" placeholder="0" oninput="handleInput(this)">
+                </td>
+                <td class="row-total">0 ₽</td>
+            </tr>
+        `).join('');
 
-            switchOrder(document.getElementById('orderId').value);
-        } catch (e) { alert("Ошибка загрузки продуктов!"); }
+        changeOrder(document.getElementById('orderId').value);
     }
 
-    // 2. Смена заказа (синхронизация с БД)
-    async function switchOrder(id) {
-        if (!id) return;
-        currentId = id;
-        setStatus('sync', 'Загрузка данных заказа ' + id + '...');
+    async function changeOrder(id) {
+        if(!id) return;
+        currentOrderId = id;
+        setStatus('sync', 'Загрузка...');
         
-        const snapshot = await db.ref('orders/' + id + '/items').once('value');
-        const items = snapshot.val() || {};
+        const snap = await db.ref('orders/' + id + '/items').once('value');
+        const items = snap.val() || {};
 
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const input = row.querySelector('.qty-input');
-            const qty = items[row.dataset.id] || "";
-            input.value = qty;
-            updateRow(input, false); // Обновляем UI без сохранения в БД
+            input.value = items[row.dataset.id] || "";
+            updateRowUI(input);
         });
-        
         calculate();
-        setStatus('ok', 'Заказ №' + id + ' готов');
+        setStatus('success', 'Синхронизировано');
     }
 
-    // 3. Ввод количества
     function handleInput(input) {
-        updateRow(input, true);
+        updateRowUI(input);
         calculate();
-        
-        clearTimeout(saveDebounce);
+        clearTimeout(timer);
         setStatus('sync', 'Сохранение...');
-        saveDebounce = setTimeout(save, 1000);
+        timer = setTimeout(save, 1000);
     }
 
-    function updateRow(input, shouldHide) {
+    function updateRowUI(input) {
         const row = input.closest('tr');
         const qty = parseInt(input.value) || 0;
         const price = parseFloat(row.dataset.wholesale);
-        
         row.querySelector('.row-total').innerText = (qty * price).toLocaleString() + ' ₽';
         row.classList.toggle('active-row', qty > 0);
-        
-        if (isOnlySelected && qty === 0) row.classList.add('hidden');
+        if (isFilterActive && qty === 0) row.classList.add('hidden');
     }
 
-    // 4. Сохранение в БД
     function save() {
         const items = {};
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
             if (qty > 0) items[row.dataset.id] = qty;
         });
-
-        db.ref('orders/' + currentId).set({
-            items,
-            total: document.getElementById('totalPrice').innerText,
-            lastUpdate: new Date().toISOString()
-        }).then(() => setStatus('ok', 'Все изменения сохранены'));
+        db.ref('orders/' + currentOrderId).set({
+            items, lastUpdate: new Date().toISOString(), total: document.getElementById('totalSum').innerText
+        }).then(() => setStatus('success', 'Сохранено'));
     }
 
-    // 5. Расчеты и фильтры
     function calculate() {
-        let sum = 0, count = 0;
+        let s = 0, c = 0;
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
-            if (qty > 0) {
-                sum += (qty * parseFloat(row.dataset.wholesale));
-                count++;
-            }
+            if (qty > 0) { s += (qty * parseFloat(row.dataset.wholesale)); c++; }
         });
-        document.getElementById('totalPrice').innerText = sum.toLocaleString() + ' ₽';
-        document.getElementById('totalItems').innerText = count;
+        document.getElementById('totalSum').innerText = s.toLocaleString() + ' ₽';
+        document.getElementById('totalCount').innerText = c;
     }
 
-    function filter() {
+    function runFilters() {
         const q = document.getElementById('search').value.toLowerCase();
         document.querySelectorAll('#tableBody tr').forEach(row => {
-            const name = row.querySelector('.p-name').innerText.toLowerCase();
+            const name = row.querySelector('.product-name').innerText.toLowerCase();
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
-            const match = name.includes(q) && (!isOnlySelected || qty > 0);
+            const match = name.includes(q) && (!isFilterActive || qty > 0);
             row.classList.toggle('hidden', !match);
         });
     }
 
-    function toggleFilter() {
-        isOnlySelected = !isOnlySelected;
-        document.getElementById('filterBtn').classList.toggle('active');
-        filter();
+    function toggleFilled() {
+        isFilterActive = !isFilterActive;
+        document.getElementById('filledBtn').classList.toggle('active');
+        runFilters();
     }
 
-    function setStatus(type, text) {
+    function setStatus(cl, txt) {
         const s = document.getElementById('syncStatus');
-        s.className = type === 'sync' ? 'status-sync' : 'status-ok';
-        s.innerText = text;
-        s.style.display = 'block';
-        if (type === 'ok') setTimeout(() => s.style.display = 'none', 2500);
+        s.className = cl === 'sync' ? 'sync-active' : 'sync-success';
+        s.innerText = txt; s.style.display = 'block';
+        if (cl === 'success') setTimeout(() => s.style.display = 'none', 2000);
     }
 
-    window.onload = loadApp;
+    window.onload = load;
 </script>
-
 </body>
 </html>
