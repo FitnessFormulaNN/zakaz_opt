@@ -3,130 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNT | Order List</title>
+    <title>SNT | Order Sheet</title>
     <style>
         :root {
-            --bg: #f4f4f7;
-            --surface: #ffffff;
             --primary: #000000;
-            --accent: #10b981;
             --text-main: #1a1a1a;
-            --text-muted: #71717a;
-            --border: #e4e4e7;
+            --text-muted: #888888;
+            --border: #eeeeee;
+            --accent: #22c55e;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
+            background-color: #ffffff;
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 40px 20px 120px 20px; /* Отступ снизу под панель */
             display: flex;
             justify-content: center;
         }
 
-        .app-container {
+        .container {
             width: 100%;
-            max-width: 800px;
-            background: var(--surface);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 900px;
         }
 
         header {
-            position: sticky;
-            top: 0;
-            background: var(--surface);
-            padding-bottom: 20px;
-            z-index: 10;
+            margin-bottom: 40px;
         }
 
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-        .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin: 0 0 10px 0; }
 
         #search {
             width: 100%;
-            padding: 14px 20px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-size: 16px;
-            box-sizing: border-box;
+            padding: 15px 0;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            font-size: 18px;
             outline: none;
-            transition: all 0.2s;
-            background: #f9f9fb;
+            transition: border-color 0.2s;
         }
 
-        #search:focus {
-            border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(0,0,0,0.05);
-        }
+        #search:focus { border-color: var(--primary); }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        
         th { 
             text-align: left; 
             font-size: 11px; 
             text-transform: uppercase; 
-            letter-spacing: 0.05em; 
             color: var(--text-muted); 
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 15px 0;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }
 
-        td { padding: 16px 0; border-bottom: 1px solid var(--border); }
+        td { padding: 20px 0; border-bottom: 1px solid var(--border); }
 
-        .row-active { background-color: #f0fdf4; } /* Подсветка выбранных товаров */
+        .product-name { font-size: 15px; line-height: 1.4; padding-right: 20px; }
+        
+        .prices { white-space: nowrap; width: 120px; }
+        .retail { font-size: 12px; color: var(--text-muted); text-decoration: line-through; display: block; }
+        .wholesale { font-weight: 600; font-size: 15px; }
 
-        .product-name { font-weight: 500; font-size: 15px; padding-right: 15px; }
-        .price-tag { white-space: nowrap; }
-        .retail-price { font-size: 12px; color: var(--text-muted); text-decoration: line-through; display: block; }
-        .wholesale-price { font-weight: 600; font-size: 15px; }
-
-        input[type="number"] {
-            width: 50px;
-            padding: 8px;
+        /* Настройка поля ввода */
+        .qty-input {
+            width: 80px; /* Сделано шире */
+            padding: 10px;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 6px;
             text-align: center;
+            font-size: 16px;
             font-weight: 600;
+            outline: none;
+            -moz-appearance: textfield; /* Убирает стрелки в Firefox */
         }
 
-        /* Убираем стрелочки у input number */
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        /* Убирает стрелки в Chrome, Safari, Edge */
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
-        .total-panel {
+        .qty-input:focus { border-color: var(--primary); }
+
+        .row-total { 
+            text-align: right; 
+            font-weight: 600; 
+            font-size: 15px; 
+            width: 100px; 
+        }
+
+        /* Парящая панель внизу */
+        .footer-panel {
             position: fixed;
             bottom: 30px;
-            right: 30px;
+            left: 50%;
+            transform: translateX(-50%);
             background: var(--primary);
             color: white;
-            padding: 20px 30px;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            text-align: right;
+            padding: 18px 35px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            z-index: 100;
         }
 
-        .total-label { font-size: 12px; opacity: 0.7; text-transform: uppercase; margin-bottom: 4px; }
-        .total-sum { font-size: 28px; font-weight: 700; color: var(--accent); }
+        .stat { display: flex; flex-direction: column; }
+        .stat-label { font-size: 10px; text-transform: uppercase; opacity: 0.5; letter-spacing: 1px; }
+        .stat-value { font-size: 20px; font-weight: 700; }
+        .total-highlight { color: var(--accent); }
+
+        tr.active { background-color: #fafafa; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="container">
     <header>
-        <h1>SNT Order Sheet</h1>
-        <div class="subtitle">Выберите товары и количество для формирования заказа</div>
-        <input type="text" id="search" placeholder="Поиск по названию..." onkeyup="filter()">
+        <h1>SNT Order List</h1>
+        <input type="text" id="search" placeholder="Поиск по продукции..." onkeyup="filter()">
     </header>
 
-    <table id="productsTable">
+    <table id="mainTable">
         <thead>
             <tr>
-                <th>Товар</th>
+                <th>Наименование</th>
                 <th>Цена (Р/О)</th>
                 <th>Кол-во</th>
-                <th style="text-align: right;">Сумма</th>
+                <th style="text-align: right;">Итого</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -134,67 +142,79 @@
     </table>
 </div>
 
-<div class="total-panel">
-    <div class="total-label">Сумма к оплате</div>
-    <div id="grandTotal" class="total-sum">0 ₽</div>
+<div class="footer-panel">
+    <div class="stat">
+        <span class="stat-label">Позиций</span>
+        <span id="countItems" class="stat-value">0</span>
+    </div>
+    <div class="stat">
+        <span class="stat-label">Сумма заказа</span>
+        <span id="grandTotal" class="stat-value total-highlight">0 ₽</span>
+    </div>
 </div>
 
 <script>
-    // 1. Автоматическая загрузка JSON
-    async function loadProducts() {
+    async function loadData() {
         try {
             const response = await fetch('products.json');
-            const data = await response.json();
-            renderTable(data);
-        } catch (e) {
-            console.error("Ошибка загрузки:", e);
-            document.querySelector('.subtitle').innerHTML = "<b style='color:red'>Файл products.json не найден</b>";
+            const products = await response.json();
+            const tbody = document.getElementById('tableBody');
+
+            tbody.innerHTML = products.map(p => `
+                <tr>
+                    <td class="product-name">${p.name}</td>
+                    <td class="prices">
+                        <span class="retail">${p.retail} ₽</span>
+                        <span class="wholesale">${p.wholesale} ₽</span>
+                    </td>
+                    <td>
+                        <input type="number" class="qty-input" min="0" value="0" 
+                               oninput="updateRow(this, ${p.wholesale})">
+                    </td>
+                    <td class="row-total">0 ₽</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error("Файл products.json не найден или поврежден");
         }
     }
 
-    // 2. Отрисовка таблицы
-    function renderTable(products) {
-        const container = document.getElementById('tableBody');
-        container.innerHTML = products.map(p => `
-            <tr>
-                <td class="product-name">${p.name}</td>
-                <td class="price-tag">
-                    <span class="retail-price">${p.retail} ₽</span>
-                    <span class="wholesale-price">${p.wholesale} ₽</span>
-                </td>
-                <td>
-                    <input type="number" min="0" value="0" oninput="calculate(this)">
-                </td>
-                <td class="row-sum" style="text-align: right; font-weight: 600;">0 ₽</td>
-                <td class="raw-wholesale" style="display:none">${p.wholesale}</td>
-            </tr>
-        `).join('');
-    }
-
-    // 3. Расчет итогов
-    function calculate(input) {
-        const row = input.closest('tr');
-        const price = parseFloat(row.querySelector('.raw-wholesale').innerText);
+    function updateRow(input, price) {
         const qty = parseInt(input.value) || 0;
+        const row = input.closest('tr');
+        const totalCell = row.querySelector('.row-total');
         
-        // Подсветка строки
-        if (qty > 0) row.classList.add('row-active');
-        else row.classList.remove('row-active');
-
         // Сумма строки
-        row.querySelector('.row-sum').innerText = (price * qty).toLocaleString() + ' ₽';
+        totalCell.innerText = (qty * price).toLocaleString() + ' ₽';
+        
+        // Подсветка активной строки
+        if (qty > 0) row.classList.add('active');
+        else row.classList.remove('active');
 
-        // Общий итог
-        let total = 0;
-        document.querySelectorAll('#tableBody tr').forEach(r => {
-            const p = parseFloat(r.querySelector('.raw-wholesale').innerText);
-            const q = parseInt(r.querySelector('input').value) || 0;
-            total += (p * q);
-        });
-        document.getElementById('grandTotal').innerText = total.toLocaleString() + ' ₽';
+        calculateTotal();
     }
 
-    // 4. Мгновенный поиск
+    function calculateTotal() {
+        let totalSum = 0;
+        let totalQty = 0;
+
+        document.querySelectorAll('tr').forEach(row => {
+            const qtyInput = row.querySelector('.qty-input');
+            if (qtyInput) {
+                const qty = parseInt(qtyInput.value) || 0;
+                if (qty > 0) {
+                    const priceText = row.querySelector('.wholesale').innerText;
+                    const price = parseFloat(priceText.replace(/[^0-9.-]+/g,""));
+                    totalSum += (qty * price);
+                    totalQty += 1;
+                }
+            }
+        });
+
+        document.getElementById('grandTotal').innerText = totalSum.toLocaleString() + ' ₽';
+        document.getElementById('countItems').innerText = totalQty;
+    }
+
     function filter() {
         const query = document.getElementById('search').value.toLowerCase();
         document.querySelectorAll('#tableBody tr').forEach(row => {
@@ -203,7 +223,7 @@
         });
     }
 
-    window.onload = loadProducts;
+    window.onload = loadData;
 </script>
 
 </body>
