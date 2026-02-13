@@ -3,133 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNT | Order Sheet</title>
-    <script src="data.js"></script>
+    <title>SNT | Excel Order</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg: #f8f9fa;
-            --card: #ffffff;
-            --primary: #2563eb;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --accent: #f0f9ff;
+            --bg: #fdfdfd;
+            --primary: #111827;
+            --accent: #059669;
+            --border: #e5e7eb;
         }
 
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text);
-            margin: 0;
-            padding: 40px 20px;
+            font-family: -apple-system, system-ui, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 40px 20px; 
+            color: var(--primary);
         }
 
         .container { max-width: 900px; margin: 0 auto; }
 
-        header { margin-bottom: 32px; }
-        h1 { font-size: 24px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.02em; }
-        p { color: var(--text-muted); margin: 0; font-size: 14px; }
-
-        .search-container {
-            position: sticky;
-            top: 20px;
-            z-index: 10;
-            margin-bottom: 24px;
-        }
-
-        #searchInput {
-            width: 100%;
-            padding: 14px 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        #searchInput:focus { border-color: var(--primary); }
-
-        .card {
-            background: var(--card);
+        /* Зона загрузки */
+        .upload-area {
+            border: 2px dashed var(--border);
             border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            padding: 40px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 30px;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .upload-area:hover { border-color: var(--accent); background: #f0fdf4; }
         
-        th { 
-            text-align: left; 
-            padding: 16px 20px; 
-            background: var(--bg); 
-            color: var(--text-muted); 
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.05em;
-        }
+        .hidden { display: none; }
 
-        td { padding: 16px 20px; border-top: 1px solid var(--border); }
-
-        .name-cell { font-weight: 500; max-width: 400px; }
-        .price-retail { color: var(--text-muted); text-decoration: line-through; font-size: 12px; }
-        .price-wholesale { font-weight: 600; color: var(--text); }
+        /* Таблица */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th { text-align: left; padding: 16px; background: #f9fafb; font-size: 12px; text-transform: uppercase; color: #6b7280; }
+        td { padding: 16px; border-top: 1px solid var(--border); font-size: 14px; }
 
         input[type="number"] {
-            width: 50px;
+            width: 60px;
             padding: 8px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            text-align: center;
-            font-weight: 600;
+            border-radius: 8px;
+            outline: none;
         }
 
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
-            -webkit-appearance: none; margin: 0;
-        }
-
-        .summary-bar {
+        /* Итоговая панель */
+        .summary-panel {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
             color: white;
-            padding: 16px 32px;
-            border-radius: 99px;
-            display: flex;
-            gap: 24px;
-            align-items: center;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.2);
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
         }
 
-        .summary-item { display: flex; flex-direction: column; }
-        .summary-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; }
-        .summary-value { font-size: 18px; font-weight: 700; color: #f8fafc; }
-        .highlight { color: #4ade80; }
+        .total-amount { font-size: 24px; font-weight: bold; color: #34d399; }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>SNT Store</h1>
-        <p id="dateDisplay"></p>
-    </header>
-
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Поиск по продукции..." onkeyup="filterTable()">
+    <div id="dropZone" class="upload-area">
+        <strong>Перетащите сюда ваш .xlsx файл</strong>
+        <p style="color: #6b7280; font-size: 14px;">или нажмите для выбора</p>
+        <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls">
     </div>
 
-    <div class="card">
-        <table>
+    <div id="content" class="hidden">
+        <input type="text" class="search-input" id="search" placeholder="Поиск товара..." onkeyup="filter()">
+        <table id="orderTable">
             <thead>
                 <tr>
-                    <th>Продукт</th>
-                    <th>Цена (Розн/Опт)</th>
-                    <th>Количество</th>
+                    <th>Наименование</th>
+                    <th>Розница</th>
+                    <th>Опт</th>
+                    <th>Кол-во</th>
                     <th>Итого</th>
                 </tr>
             </thead>
@@ -138,81 +102,84 @@
     </div>
 </div>
 
-<div class="summary-bar">
-    <div class="summary-item">
-        <span class="summary-label">Позиций</span>
-        <span id="totalItems" class="summary-value">0</span>
-    </div>
-    <div class="summary-item">
-        <span class="summary-label">Сумма заказа</span>
-        <span id="totalPrice" class="summary-value highlight">0 ₽</span>
-    </div>
+<div id="summary" class="summary-panel hidden">
+    <div style="font-size: 12px; opacity: 0.8;">ИТОГО К ОПЛАТЕ</div>
+    <div id="grandTotal" class="total-amount">0 ₽</div>
 </div>
 
 <script>
-    // Парсим данные из переменной в data.js
-    function init() {
-        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-        
-        const lines = csvRawData.split('\n');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropZone.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+    // Обработка Drag-and-Drop
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = '#059669'; };
+    dropZone.ondragleave = () => { dropZone.style.borderColor = '#e5e7eb'; };
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        handleFile(e.dataTransfer.files[0]);
+    };
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            
+            // Превращаем в массив JSON
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+            renderTable(jsonData);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function renderTable(data) {
         const tbody = document.getElementById('tableBody');
-
-        lines.forEach(line => {
-            if (!line.trim()) return;
-            const parts = line.split(';');
-            if (parts.length < 3) return;
-
-            const name = parts[0].replace(/"/g, '');
-            const retail = parts[1];
-            const wholesale = parts[2];
+        tbody.innerHTML = '';
+        
+        // Предполагаем структуру: А - Название, B - Розница, C - Опт
+        data.forEach((row, index) => {
+            if (index === 0 || !row[0]) return; // Пропускаем шапку
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="name-cell">${name}</td>
-                <td>
-                    <div class="price-retail">${retail} ₽</div>
-                    <div class="price-wholesale">${wholesale} ₽</div>
-                </td>
-                <td><input type="number" min="0" value="0" oninput="calculate()"></td>
+                <td style="font-weight:500">${row[0]}</td>
+                <td style="color:#9ca3af">${row[1]}</td>
+                <td class="opt-price">${row[2]}</td>
+                <td><input type="number" min="0" value="0" oninput="calc()"></td>
                 <td class="row-total" style="font-weight:600">0</td>
             `;
             tbody.appendChild(tr);
         });
+
+        document.getElementById('content').classList.remove('hidden');
+        document.getElementById('summary').classList.remove('hidden');
+        dropZone.classList.add('hidden');
     }
 
-    function calculate() {
-        let totalSum = 0;
-        let totalCount = 0;
-        const rows = document.querySelectorAll('#tableBody tr');
-
-        rows.forEach(row => {
-            const wholesale = parseFloat(row.querySelector('.price-wholesale').innerText);
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            const price = parseFloat(row.querySelector('.opt-price').innerText) || 0;
             const qty = parseInt(row.querySelector('input').value) || 0;
-            const rowTotal = row.querySelector('.row-total');
-            
-            const sum = wholesale * qty;
-            rowTotal.innerText = sum > 0 ? sum + ' ₽' : '0';
-            
-            if (qty > 0) {
-                totalSum += sum;
-                totalCount += qty;
-            }
+            const sum = price * qty;
+            row.querySelector('.row-total').innerText = sum.toLocaleString() + ' ₽';
+            total += sum;
         });
-
-        document.getElementById('totalPrice').innerText = totalSum.toLocaleString() + ' ₽';
-        document.getElementById('totalItems').innerText = totalCount;
+        document.getElementById('grandTotal').innerText = total.toLocaleString() + ' ₽';
     }
 
-    function filterTable() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#tableBody tr');
-        rows.forEach(row => {
-            const name = row.querySelector('.name-cell').innerText.toLowerCase();
-            row.style.display = name.includes(query) ? '' : 'none';
+    function filter() {
+        const val = document.getElementById('search').value.toLowerCase();
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            const text = row.cells[0].innerText.toLowerCase();
+            row.style.display = text.includes(val) ? '' : 'none';
         });
     }
-
-    window.onload = init;
 </script>
 
 </body>
