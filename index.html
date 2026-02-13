@@ -2,132 +2,134 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Лист заказа SNT</title>
+    <title>SNT Авто-заказ</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f7f6; }
-        h2 { color: #333; }
-        .controls { margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input[type="text"] { padding: 8px; width: 300px; border: 1px solid #ddd; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; background: #fff; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #007bff; color: white; position: sticky; top: 0; }
-        tr:hover { background-color: #f1f1f1; }
-        .qty-input { width: 60px; padding: 5px; text-align: center; }
-        .summary { position: fixed; bottom: 0; right: 0; background: #333; color: #fff; padding: 20px; border-radius: 10px 0 0 0; box-shadow: -2px -2px 10px rgba(0,0,0,0.3); }
-        .total-val { font-size: 1.2em; font-weight: bold; color: #4caf50; }
-        .file-upload { margin-bottom: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #eceff1; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .status { padding: 10px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9em; }
+        .status.loading { background: #fff3cd; color: #856404; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.success { background: #d4edda; color: #155724; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #3498db; color: white; padding: 12px; text-align: left; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f9f9f9; }
+        
+        input[type="number"] { width: 50px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        .search-box { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        
+        .footer-total { position: fixed; bottom: 20px; right: 20px; background: #2c3e50; color: white; padding: 20px; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .total-price { font-size: 1.5em; color: #2ecc71; display: block; }
     </style>
 </head>
 <body>
 
-    <h2>Бланк заказа продукции SNT</h2>
+<div class="container">
+    <h2>Лист заказа SNT</h2>
+    <div id="status" class="status loading">Поиск файла price.csv...</div>
+    
+    <input type="text" id="search" class="search-box" placeholder="Начните вводить название товара..." onkeyup="filterTable()">
 
-    <div class="controls">
-        <div class="file-upload">
-            <label>Выберите файл CSV: </label>
-            <input type="file" id="csvFile" accept=".csv">
-        </div>
-        <input type="text" id="searchInput" placeholder="Поиск по названию..." onkeyup="filterTable()">
-    </div>
-
-    <table id="productTable">
+    <table id="orderTable">
         <thead>
             <tr>
                 <th>Наименование</th>
-                <th>Розница (₽)</th>
-                <th>Опт (₽)</th>
+                <th>Розница</th>
+                <th>Опт</th>
                 <th>Кол-во</th>
-                <th>Сумма (опт)</th>
+                <th>Итого</th>
             </tr>
         </thead>
-        <tbody>
-            </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
+</div>
 
-    <div class="summary">
-        <div>Товаров: <span id="totalItems">0</span></div>
-        <div>Итого к оплате (опт): <span id="totalPrice" class="total-val">0</span> ₽</div>
-    </div>
+<div class="footer-total">
+    <span>Итого (Опт):</span>
+    <span id="grandTotal" class="total-price">0 ₽</span>
+</div>
 
-    <script>
-        const fileInput = document.getElementById('csvFile');
-        const tableBody = document.querySelector('#productTable tbody');
-        let products = [];
+<script>
+    // Имя файла в той же директории
+    const CSV_FILE = 'price.csv'; 
 
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
+    async function loadCSV() {
+        const statusDiv = document.getElementById('status');
+        try {
+            const response = await fetch(CSV_FILE);
+            if (!response.ok) throw new Error('Файл price.csv не найден в папке');
+            
+            const data = await response.text();
+            renderTable(data);
+            
+            statusDiv.className = 'status success';
+            statusDiv.innerText = 'Прайс успешно загружен автоматически';
+        } catch (err) {
+            statusDiv.className = 'status error';
+            statusDiv.innerText = 'Ошибка: ' + err.message + '. Убедитесь, что используете локальный сервер (localhost).';
+        }
+    }
 
-            reader.onload = function(event) {
-                const text = event.target.result;
-                processData(text);
-            };
+    function renderTable(csvText) {
+        const rows = csvText.split('\n');
+        const tbody = document.getElementById('tableBody');
+        
+        rows.forEach(line => {
+            if (!line.trim()) return;
+            
+            // Разбивка по вашему формату (Название;Розница;Опт)
+            const cols = line.split(';');
+            if (cols.length < 3) return;
 
-            reader.readAsText(file, 'UTF-8');
+            const name = cols[0].replace(/"/g, '');
+            const retail = cols[1];
+            const wholesale = cols[2];
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${name}</td>
+                <td>${retail}</td>
+                <td class="wholesale-val">${wholesale}</td>
+                <td><input type="number" min="0" value="0" oninput="updateRow(this)"></td>
+                <td class="row-total">0</td>
+            `;
+            tbody.appendChild(tr);
         });
+    }
 
-        function processData(csvText) {
-            const lines = csvText.split(/\r?\n/);
-            tableBody.innerHTML = '';
-            products = [];
+    function updateRow(input) {
+        const row = input.parentElement.parentElement;
+        const price = parseFloat(row.querySelector('.wholesale-val').innerText);
+        const qty = parseInt(input.value) || 0;
+        const total = row.querySelector('.row-total');
+        
+        total.innerText = (price * qty).toFixed(0);
+        calculateGrandTotal();
+    }
 
-            lines.forEach((line, index) => {
-                if (line.trim() === '') return;
+    function calculateGrandTotal() {
+        let grandTotal = 0;
+        document.querySelectorAll('.row-total').forEach(td => {
+            grandTotal += parseFloat(td.innerText);
+        });
+        document.getElementById('grandTotal').innerText = grandTotal.toLocaleString() + ' ₽';
+    }
 
-                // Разделяем по точке с запятой (как в твоем примере)
-                // Обработка кавычек для названий, содержащих запятые
-                const parts = line.split(';');
-                
-                if (parts.length >= 3) {
-                    const name = parts[0].replace(/"/g, '');
-                    const retail = parseFloat(parts[1]);
-                    const wholesale = parseFloat(parts[2]);
+    function filterTable() {
+        const query = document.getElementById('search').value.toLowerCase();
+        const rows = document.querySelectorAll('#tableBody tr');
+        
+        rows.forEach(row => {
+            const text = row.cells[0].innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
 
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${name}</td>
-                        <td>${retail}</td>
-                        <td>${wholesale}</td>
-                        <td><input type="number" class="qty-input" min="0" value="0" onchange="calculateTotal()"></td>
-                        <td class="row-total">0</td>
-                    `;
-                    tableBody.appendChild(row);
-                }
-            });
-        }
+    // Запуск при загрузке страницы
+    window.onload = loadCSV;
+</script>
 
-        function filterTable() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const rows = tableBody.getElementsByTagName('tr');
-
-            for (let row of rows) {
-                const name = row.cells[0].textContent.toLowerCase();
-                row.style.display = name.includes(query) ? '' : 'none';
-            }
-        }
-
-        function calculateTotal() {
-            let totalSum = 0;
-            let totalQty = 0;
-            const rows = tableBody.getElementsByTagName('tr');
-
-            for (let row of rows) {
-                const wholesale = parseFloat(row.cells[2].textContent);
-                const qty = parseInt(row.querySelector('.qty-input').value) || 0;
-                const rowTotalCell = row.querySelector('.row-total');
-                
-                const rowSum = wholesale * qty;
-                rowTotalCell.textContent = rowSum;
-                
-                if (qty > 0) {
-                    totalSum += rowSum;
-                    totalQty += qty;
-                }
-            }
-
-            document.getElementById('totalPrice').textContent = totalSum.toLocaleString();
-            document.getElementById('totalItems').textContent = totalQty;
-        }
-    </script>
 </body>
 </html>
