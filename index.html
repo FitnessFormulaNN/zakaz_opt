@@ -15,150 +15,99 @@
             --text-muted: #888888;
             --border: #eeeeee;
             --accent: #22c55e;
-            --focus-ring: #f1f1f1;
             --bg-active: #fafafa;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #ffffff;
-            color: var(--text-main);
-            margin: 0;
-            padding: 40px 20px 140px 20px;
-            display: flex;
-            justify-content: center;
-        }
-
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px 20px 120px 20px; display: flex; justify-content: center; background: #fff; }
         .container { width: 100%; max-width: 900px; }
-        
-        header { margin-bottom: 30px; }
-        h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin: 0; }
 
-        .controls {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
+        /* Шапка с ID заказа */
+        .session-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 0; border-bottom: 2px solid var(--primary); margin-bottom: 20px;
         }
-
-        #search { 
-            flex-grow: 1; 
-            padding: 18px 0; 
-            border: none; 
-            font-size: 18px; 
-            outline: none; 
-            background: transparent;
+        .order-id-wrapper { display: flex; align-items: center; gap: 10px; }
+        .order-id-wrapper input {
+            border: 1px solid var(--border); padding: 10px; border-radius: 8px;
+            width: 120px; font-weight: 800; font-size: 16px; text-align: center; outline: none;
         }
+        .order-id-wrapper input:focus { border-color: var(--primary); }
 
+        /* Поиск и фильтр */
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        #search { flex-grow: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 16px; }
         .filter-btn {
-            background: none; 
-            border: 1px solid var(--border);
-            padding: 10px 20px; 
-            border-radius: 10px; 
-            cursor: pointer;
-            font-size: 13px; 
-            font-weight: 500; 
-            transition: all 0.2s;
-            white-space: nowrap;
+            padding: 0 20px; border: 1px solid var(--border); border-radius: 8px;
+            background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;
         }
+        .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
+        /* Таблица */
         table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 10px 0; }
+        td { padding: 15px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
         
-        th { 
-            text-align: left; 
-            font-size: 11px; 
-            text-transform: uppercase; 
-            color: var(--text-muted); 
-            padding: 15px 0; 
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
-        }
+        .product-info { display: flex; flex-direction: column; }
+        .p-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+        .p-price { font-size: 13px; color: var(--text-muted); }
+        .p-wholesale { font-weight: 700; color: var(--primary); margin-left: 8px; }
 
-        td { 
-            padding: 20px 0; 
-            border-bottom: 1px solid var(--border); 
-            vertical-align: middle; /* Идеальное выравнивание по вертикали */
-        }
-
-        .product-name { font-size: 16px; line-height: 1.4; padding-right: 30px; }
-        .prices { white-space: nowrap; width: 150px; }
-        .retail { font-size: 12px; color: var(--text-muted); text-decoration: line-through; display: block; }
-        .wholesale { font-weight: 600; font-size: 16px; margin-top: 2px; display: block; }
-
-        /* Поле ввода количества БЕЗ стрелок */
         .qty-input {
-            width: 100px; 
-            padding: 14px; 
-            border: 1px solid var(--border); 
-            border-radius: 10px;
-            text-align: center; 
-            font-size: 18px; 
-            font-weight: 700; 
-            outline: none;
-            transition: all 0.2s;
-            -moz-appearance: textfield; /* Фикс для Firefox */
+            width: 80px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            text-align: center; font-size: 18px; font-weight: 700; outline: none;
         }
-
-        /* Полное удаление стрелок для Chrome, Safari, Edge, Opera */
-        .qty-input::-webkit-outer-spin-button,
-        .qty-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        .qty-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--focus-ring); }
-        .qty-input::placeholder { color: #e5e5e5; font-weight: 400; }
+        .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
-        .row-total { text-align: right; font-weight: 700; font-size: 16px; width: 130px; }
+        .row-total { text-align: right; font-weight: 700; font-size: 16px; width: 120px; }
 
-        /* Нижняя панель */
+        /* Футер */
         .footer-panel {
-            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
-            background: var(--primary); color: white; padding: 22px 45px;
-            border-radius: 100px; display: flex; align-items: center; gap: 60px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); z-index: 100;
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: white; width: 95%; max-width: 600px;
+            height: 70px; padding: 0 40px; border-radius: 100px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 100; box-sizing: border-box;
         }
+        .stat-group { display: flex; align-items: baseline; gap: 8px; }
+        .stat-label { font-size: 11px; text-transform: uppercase; opacity: 0.7; }
+        .stat-value { font-size: 22px; font-weight: 700; }
+        .accent-color { color: var(--accent); }
 
-        .stat-group { display: flex; flex-direction: column; }
-        .stat-label { font-size: 10px; text-transform: uppercase; opacity: 0.5; letter-spacing: 1px; margin-bottom: 4px; }
-        .stat-value { font-size: 24px; font-weight: 700; }
-        .total-highlight { color: var(--accent); }
-
-        /* Индикатор синхронизации */
+        /* Статус */
         #syncStatus {
-            position: fixed; top: 25px; right: 25px; font-size: 12px; font-weight: 500;
-            padding: 10px 20px; border-radius: 30px; display: none; z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: fixed; top: 10px; right: 10px; padding: 5px 12px;
+            border-radius: 20px; font-size: 11px; font-weight: 600; display: none;
         }
-        .syncing { display: block !important; background: #fffbeb; color: #92400e; }
-        .saved { display: block !important; background: #f0fdf4; color: #166534; }
+        .status-sync { display: block; background: #fff8e1; color: #b78103; }
+        .status-ok { display: block; background: #e8f5e9; color: #2e7d32; }
 
-        .hidden-row { display: none !important; }
-        tr.active { background-color: var(--bg-active); }
+        .hidden { display: none !important; }
+        tr.active-row { background: var(--bg-active); }
     </style>
 </head>
 <body>
 
-<div id="syncStatus">Инициализация...</div>
+<div id="syncStatus"></div>
 
 <div class="container">
-    <header><h1>SNT Order List</h1></header>
-
-    <div class="controls">
-        <input type="text" id="search" placeholder="Поиск по продукции..." onkeyup="applyFilters()">
-        <button id="showFilledBtn" class="filter-btn" onclick="toggleFilledFilter()">Показать заполненные</button>
+    <div class="session-header">
+        <h1>SNT Заказ</h1>
+        <div class="order-id-wrapper">
+            <span style="font-size: 12px; font-weight: 600;">№ ЗАКАЗА:</span>
+            <input type="text" id="orderId" value="1" onchange="switchOrder(this.value)">
+        </div>
     </div>
 
-    <table id="mainTable">
+    <div class="search-bar">
+        <input type="text" id="search" placeholder="Поиск по названию..." onkeyup="filter()">
+        <button id="filterBtn" class="filter-btn" onclick="toggleFilter()">Выбранные</button>
+    </div>
+
+    <table id="productsTable">
         <thead>
             <tr>
-                <th>Наименование</th>
-                <th>Цена (Р/О)</th>
-                <th style="text-align: center;">Количество</th>
+                <th>Товар / Цена</th>
+                <th style="text-align: center;">Кол-во</th>
                 <th style="text-align: right;">Итого</th>
             </tr>
         </thead>
@@ -168,12 +117,12 @@
 
 <div class="footer-panel">
     <div class="stat-group">
-        <span class="stat-label">Позиций</span>
-        <span id="countItems" class="stat-value">0</span>
+        <span class="stat-label">Позиций:</span>
+        <span id="totalItems" class="stat-value">0</span>
     </div>
     <div class="stat-group">
-        <span class="stat-label">Сумма заказа</span>
-        <span id="grandTotal" class="stat-value total-highlight">0 ₽</span>
+        <span class="stat-label">Итого:</span>
+        <span id="totalPrice" class="stat-value accent-color">0 ₽</span>
     </div>
 </div>
 
@@ -189,20 +138,14 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    
-    // Привязка сессии к браузеру
-    let orderId = localStorage.getItem('snt_order_session');
-    if (!orderId) {
-        orderId = 'order_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('snt_order_session', orderId);
-    }
+    const db = firebase.database();
 
-    let isFilledFilterActive = false;
-    let saveTimeout;
+    let currentId = "1";
+    let isOnlySelected = false;
+    let saveDebounce;
 
-    async function startApp() {
-        showStatus('syncing', 'Загрузка данных...');
+    // 1. Загрузка структуры товаров
+    async function loadApp() {
         try {
             const response = await fetch('products.json');
             const products = await response.json();
@@ -210,71 +153,81 @@
 
             tbody.innerHTML = products.map(p => `
                 <tr data-id="${p.id}" data-wholesale="${p.wholesale}">
-                    <td class="product-name">${p.name}</td>
-                    <td class="prices">
-                        <span class="retail">${p.retail} ₽</span>
-                        <span class="wholesale">${p.wholesale} ₽</span>
+                    <td>
+                        <div class="product-info">
+                            <span class="p-name">${p.name}</span>
+                            <span class="p-price">Р: ${p.retail} ₽ <span class="p-wholesale">О: ${p.wholesale} ₽</span></span>
+                        </div>
                     </td>
-                    <td style="text-align: center;">
-                        <input type="number" class="qty-input" placeholder="0" oninput="onInputEvent(this)">
+                    <td align="center">
+                        <input type="number" class="qty-input" placeholder="0" oninput="handleInput(this)">
                     </td>
                     <td class="row-total">0 ₽</td>
                 </tr>
             `).join('');
 
-            // Восстановление из Firebase
-            const snapshot = await database.ref('orders/' + orderId + '/items').once('value');
-            const cloudItems = snapshot.val();
-            
-            if (cloudItems) {
-                document.querySelectorAll('#tableBody tr').forEach(row => {
-                    const id = row.dataset.id;
-                    if (cloudItems[id]) {
-                        const input = row.querySelector('.qty-input');
-                        input.value = cloudItems[id];
-                        updateRowVisuals(input);
-                    }
-                });
-                updateGrandTotal();
-            }
-            showStatus('saved', 'Синхронизировано');
-        } catch (e) { showStatus('syncing', 'Ошибка JSON / Сервера'); }
+            switchOrder(document.getElementById('orderId').value);
+        } catch (e) { alert("Ошибка загрузки продуктов!"); }
     }
 
-    function onInputEvent(input) {
-        updateRowVisuals(input);
-        updateGrandTotal();
+    // 2. Смена заказа (синхронизация с БД)
+    async function switchOrder(id) {
+        if (!id) return;
+        currentId = id;
+        setStatus('sync', 'Загрузка данных заказа ' + id + '...');
         
-        clearTimeout(saveTimeout);
-        showStatus('syncing', 'Сохранение...');
-        saveTimeout = setTimeout(syncToCloud, 1000);
+        const snapshot = await db.ref('orders/' + id + '/items').once('value');
+        const items = snapshot.val() || {};
+
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            const input = row.querySelector('.qty-input');
+            const qty = items[row.dataset.id] || "";
+            input.value = qty;
+            updateRow(input, false); // Обновляем UI без сохранения в БД
+        });
+        
+        calculate();
+        setStatus('ok', 'Заказ №' + id + ' готов');
     }
 
-    function updateRowVisuals(input) {
+    // 3. Ввод количества
+    function handleInput(input) {
+        updateRow(input, true);
+        calculate();
+        
+        clearTimeout(saveDebounce);
+        setStatus('sync', 'Сохранение...');
+        saveDebounce = setTimeout(save, 1000);
+    }
+
+    function updateRow(input, shouldHide) {
         const row = input.closest('tr');
         const qty = parseInt(input.value) || 0;
         const price = parseFloat(row.dataset.wholesale);
-        row.querySelector('.row-total').innerText = (qty * price).toLocaleString() + ' ₽';
         
-        row.classList.toggle('active', qty > 0);
-        if (isFilledFilterActive && qty === 0) row.classList.add('hidden-row');
+        row.querySelector('.row-total').innerText = (qty * price).toLocaleString() + ' ₽';
+        row.classList.toggle('active-row', qty > 0);
+        
+        if (isOnlySelected && qty === 0) row.classList.add('hidden');
     }
 
-    function syncToCloud() {
+    // 4. Сохранение в БД
+    function save() {
         const items = {};
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
             if (qty > 0) items[row.dataset.id] = qty;
         });
 
-        database.ref('orders/' + orderId).set({
-            items: items,
-            updatedAt: new Date().toISOString(),
-            total: document.getElementById('grandTotal').innerText
-        }).then(() => showStatus('saved', 'Сохранено'));
+        db.ref('orders/' + currentId).set({
+            items,
+            total: document.getElementById('totalPrice').innerText,
+            lastUpdate: new Date().toISOString()
+        }).then(() => setStatus('ok', 'Все изменения сохранены'));
     }
 
-    function updateGrandTotal() {
+    // 5. Расчеты и фильтры
+    function calculate() {
         let sum = 0, count = 0;
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
@@ -283,38 +236,36 @@
                 count++;
             }
         });
-        document.getElementById('grandTotal').innerText = sum.toLocaleString() + ' ₽';
-        document.getElementById('countItems').innerText = count;
+        document.getElementById('totalPrice').innerText = sum.toLocaleString() + ' ₽';
+        document.getElementById('totalItems').innerText = count;
     }
 
-    function toggleFilledFilter() {
-        isFilledFilterActive = !isFilledFilterActive;
-        const btn = document.getElementById('showFilledBtn');
-        btn.classList.toggle('active');
-        btn.innerText = isFilledFilterActive ? "Показать все" : "Показать заполненные";
-        applyFilters();
-    }
-
-    function applyFilters() {
+    function filter() {
         const q = document.getElementById('search').value.toLowerCase();
         document.querySelectorAll('#tableBody tr').forEach(row => {
-            const name = row.querySelector('.product-name').innerText.toLowerCase();
+            const name = row.querySelector('.p-name').innerText.toLowerCase();
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
-            const matchesSearch = name.includes(q);
-            const matchesFilled = isFilledFilterActive ? qty > 0 : true;
-            row.classList.toggle('hidden-row', !(matchesSearch && matchesFilled));
+            const match = name.includes(q) && (!isOnlySelected || qty > 0);
+            row.classList.toggle('hidden', !match);
         });
     }
 
-    function showStatus(type, text) {
-        const s = document.getElementById('syncStatus');
-        s.className = (type === 'syncing') ? 'syncing' : 'saved';
-        s.innerText = text;
-        s.style.display = 'block';
-        if (type === 'saved') setTimeout(() => s.style.display = 'none', 2000);
+    function toggleFilter() {
+        isOnlySelected = !isOnlySelected;
+        document.getElementById('filterBtn').classList.toggle('active');
+        filter();
     }
 
-    window.onload = startApp;
+    function setStatus(type, text) {
+        const s = document.getElementById('syncStatus');
+        s.className = type === 'sync' ? 'status-sync' : 'status-ok';
+        s.innerText = text;
+        s.style.display = 'block';
+        if (type === 'ok') setTimeout(() => s.style.display = 'none', 2500);
+    }
+
+    window.onload = loadApp;
 </script>
+
 </body>
 </html>
