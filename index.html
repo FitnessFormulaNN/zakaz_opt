@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNT | Order Sheet</title>
+    <title>Оптовый бланк заказа ФФ НН</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        /* Фикс прыжка контента */
+        /* Фикс прыжка контента вправо */
         html { scrollbar-gutter: stable; }
 
         :root {
@@ -31,17 +31,12 @@
 
         .container { width: 100%; max-width: 900px; }
 
-        /* Шапка */
         header { margin-bottom: 30px; }
-        .session-info { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .session-info input { 
-            width: 80px; padding: 8px; border: 1px solid var(--border); 
-            border-radius: 6px; font-weight: 700; text-align: center; outline: none;
-        }
+        h1 { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
 
         /* Поиск и кнопки */
         .controls { display: flex; gap: 15px; align-items: center; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
-        #search { flex-grow: 1; padding: 15px 0; border: none; font-size: 18px; outline: none; }
+        #search { flex-grow: 1; padding: 15px 0; border: none; font-size: 18px; outline: none; background: transparent; }
         
         .filter-btn {
             background: none; border: 1px solid var(--border); padding: 8px 16px;
@@ -53,7 +48,6 @@
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 15px 0; font-weight: 500; }
         
-        /* Вертикальное выравнивание по центру */
         td { padding: 20px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
         .product-name { font-size: 15px; line-height: 1.4; padding-right: 20px; }
@@ -73,7 +67,7 @@
 
         .row-total { text-align: right; font-weight: 600; font-size: 15px; width: 120px; }
 
-        /* Панель итогов (Компактная и широкая) */
+        /* Панель итогов */
         .footer-panel {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: var(--primary); color: white;
@@ -87,10 +81,9 @@
         .stat-value { font-size: 22px; font-weight: 700; }
         .total-highlight { color: var(--accent); }
 
-        /* Статус синхронизации */
         #syncStatus {
             position: fixed; top: 15px; right: 15px; font-size: 11px;
-            padding: 6px 12px; border-radius: 20px; display: none;
+            padding: 6px 12px; border-radius: 20px; display: none; z-index: 1001;
         }
         .sync-active { display: block; background: #fff8e1; color: #b78103; }
         .sync-success { display: block; background: #e8f5e9; color: #2e7d32; }
@@ -105,11 +98,7 @@
 
 <div class="container">
     <header>
-        <div class="session-info">
-            <span style="font-size: 12px;">ID ЗАКАЗА:</span>
-            <input type="text" id="orderId" value="1" onchange="changeOrder(this.value)">
-        </div>
-        <h1>SNT Order List</h1>
+        <h1>Оптовый бланк заказа ФФ НН</h1>
     </header>
 
     <div class="controls">
@@ -155,38 +144,38 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let currentOrderId = "1";
+    // Фиксированный путь в БД для этого бланка
+    const orderPath = 'current_order'; 
     let isFilterActive = false;
     let timer;
 
     async function load() {
-        const res = await fetch('products.json');
-        const data = await res.json();
-        const tbody = document.getElementById('tableBody');
+        try {
+            const res = await fetch('products.json');
+            const data = await res.json();
+            const tbody = document.getElementById('tableBody');
 
-        tbody.innerHTML = data.map(p => `
-            <tr data-id="${p.id}" data-wholesale="${p.wholesale}">
-                <td class="product-name">${p.name}</td>
-                <td class="prices">
-                    <span class="retail">${p.retail} ₽</span>
-                    <span class="wholesale">${p.wholesale} ₽</span>
-                </td>
-                <td align="center">
-                    <input type="number" class="qty-input" placeholder="0" oninput="handleInput(this)">
-                </td>
-                <td class="row-total">0 ₽</td>
-            </tr>
-        `).join('');
+            tbody.innerHTML = data.map(p => `
+                <tr data-id="${p.id}" data-wholesale="${p.wholesale}">
+                    <td class="product-name">${p.name}</td>
+                    <td class="prices">
+                        <span class="retail">${p.retail} ₽</span>
+                        <span class="wholesale">${p.wholesale} ₽</span>
+                    </td>
+                    <td align="center">
+                        <input type="number" class="qty-input" placeholder="0" oninput="handleInput(this)">
+                    </td>
+                    <td class="row-total">0 ₽</td>
+                </tr>
+            `).join('');
 
-        changeOrder(document.getElementById('orderId').value);
+            await syncWithDB();
+        } catch (e) { console.error("Ошибка загрузки данных"); }
     }
 
-    async function changeOrder(id) {
-        if(!id) return;
-        currentOrderId = id;
-        setStatus('sync', 'Загрузка...');
-        
-        const snap = await db.ref('orders/' + id + '/items').once('value');
+    async function syncWithDB() {
+        setStatus('sync', 'Загрузка данных...');
+        const snap = await db.ref(orderPath + '/items').once('value');
         const items = snap.val() || {};
 
         document.querySelectorAll('#tableBody tr').forEach(row => {
@@ -221,7 +210,7 @@
             const qty = parseInt(row.querySelector('.qty-input').value) || 0;
             if (qty > 0) items[row.dataset.id] = qty;
         });
-        db.ref('orders/' + currentOrderId).set({
+        db.ref(orderPath).set({
             items, lastUpdate: new Date().toISOString(), total: document.getElementById('totalSum').innerText
         }).then(() => setStatus('success', 'Сохранено'));
     }
