@@ -11,6 +11,7 @@
             --text-muted: #888888;
             --border: #eeeeee;
             --accent: #22c55e;
+            --focus-ring: #e5e7eb;
         }
 
         body {
@@ -18,20 +19,14 @@
             background-color: #ffffff;
             color: var(--text-main);
             margin: 0;
-            padding: 40px 20px 120px 20px; /* Отступ снизу под панель */
+            padding: 40px 20px 140px 20px;
             display: flex;
             justify-content: center;
         }
 
-        .container {
-            width: 100%;
-            max-width: 900px;
-        }
+        .container { width: 100%; max-width: 900px; }
 
-        header {
-            margin-bottom: 40px;
-        }
-
+        header { margin-bottom: 40px; }
         h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin: 0 0 10px 0; }
 
         #search {
@@ -43,7 +38,6 @@
             outline: none;
             transition: border-color 0.2s;
         }
-
         #search:focus { border-color: var(--primary); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -56,46 +50,55 @@
             padding: 15px 0;
             font-weight: 500;
             letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
         }
 
-        td { padding: 20px 0; border-bottom: 1px solid var(--border); }
+        /* Выравнивание по вертикали для всех ячеек */
+        td { 
+            padding: 16px 0; 
+            border-bottom: 1px solid var(--border); 
+            vertical-align: middle; 
+        }
 
-        .product-name { font-size: 15px; line-height: 1.4; padding-right: 20px; }
+        .product-name { font-size: 15px; line-height: 1.4; padding-right: 20px; font-weight: 400; }
         
-        .prices { white-space: nowrap; width: 120px; }
-        .retail { font-size: 12px; color: var(--text-muted); text-decoration: line-through; display: block; }
+        .prices { white-space: nowrap; width: 140px; }
+        .retail { font-size: 12px; color: var(--text-muted); text-decoration: line-through; display: block; margin-bottom: 2px; }
         .wholesale { font-weight: 600; font-size: 15px; }
 
-        /* Настройка поля ввода */
+        /* Поле ввода количества */
         .qty-input {
-            width: 80px; /* Сделано шире */
-            padding: 10px;
+            width: 90px;
+            padding: 12px;
             border: 1px solid var(--border);
-            border-radius: 6px;
+            border-radius: 8px;
             text-align: center;
             font-size: 16px;
             font-weight: 600;
             outline: none;
-            -moz-appearance: textfield; /* Убирает стрелки в Firefox */
+            transition: all 0.2s;
+            -moz-appearance: textfield;
         }
 
-        /* Убирает стрелки в Chrome, Safari, Edge */
         .qty-input::-webkit-outer-spin-button,
-        .qty-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+        .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        .qty-input:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 3px var(--focus-ring);
         }
 
-        .qty-input:focus { border-color: var(--primary); }
+        /* Placeholder для пустых полей */
+        .qty-input::placeholder { color: #d1d1d6; font-weight: 400; }
 
         .row-total { 
             text-align: right; 
             font-weight: 600; 
             font-size: 15px; 
-            width: 100px; 
+            width: 120px; 
         }
 
-        /* Парящая панель внизу */
+        /* Панель итогов */
         .footer-panel {
             position: fixed;
             bottom: 30px;
@@ -103,21 +106,21 @@
             transform: translateX(-50%);
             background: var(--primary);
             color: white;
-            padding: 18px 35px;
-            border-radius: 50px;
+            padding: 20px 40px;
+            border-radius: 60px;
             display: flex;
             align-items: center;
-            gap: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            gap: 50px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             z-index: 100;
         }
 
         .stat { display: flex; flex-direction: column; }
-        .stat-label { font-size: 10px; text-transform: uppercase; opacity: 0.5; letter-spacing: 1px; }
-        .stat-value { font-size: 20px; font-weight: 700; }
+        .stat-label { font-size: 10px; text-transform: uppercase; opacity: 0.5; letter-spacing: 1px; margin-bottom: 2px; }
+        .stat-value { font-size: 22px; font-weight: 700; }
         .total-highlight { color: var(--accent); }
 
-        tr.active { background-color: #fafafa; }
+        tr.active { background-color: #fcfcfc; }
     </style>
 </head>
 <body>
@@ -125,7 +128,7 @@
 <div class="container">
     <header>
         <h1>SNT Order List</h1>
-        <input type="text" id="search" placeholder="Поиск по продукции..." onkeyup="filter()">
+        <input type="text" id="search" placeholder="Поиск товара..." onkeyup="filter()">
     </header>
 
     <table id="mainTable">
@@ -133,12 +136,11 @@
             <tr>
                 <th>Наименование</th>
                 <th>Цена (Р/О)</th>
-                <th>Кол-во</th>
+                <th style="text-align: center;">Количество</th>
                 <th style="text-align: right;">Итого</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
 </div>
 
@@ -167,27 +169,30 @@
                         <span class="retail">${p.retail} ₽</span>
                         <span class="wholesale">${p.wholesale} ₽</span>
                     </td>
-                    <td>
-                        <input type="number" class="qty-input" min="0" value="0" 
+                    <td style="text-align: center;">
+                        <input type="number" class="qty-input" placeholder="0" 
                                oninput="updateRow(this, ${p.wholesale})">
                     </td>
                     <td class="row-total">0 ₽</td>
                 </tr>
             `).join('');
         } catch (err) {
-            console.error("Файл products.json не найден или поврежден");
+            console.error("Ошибка: убедитесь, что products.json доступен.");
         }
     }
 
     function updateRow(input, price) {
-        const qty = parseInt(input.value) || 0;
+        // Если поле пустое, считаем как 0
+        const val = input.value;
+        const qty = val === "" ? 0 : parseInt(val);
+        
         const row = input.closest('tr');
         const totalCell = row.querySelector('.row-total');
         
-        // Сумма строки
+        // Расчет суммы строки
         totalCell.innerText = (qty * price).toLocaleString() + ' ₽';
         
-        // Подсветка активной строки
+        // Визуальный акцент
         if (qty > 0) row.classList.add('active');
         else row.classList.remove('active');
 
@@ -198,16 +203,15 @@
         let totalSum = 0;
         let totalQty = 0;
 
-        document.querySelectorAll('tr').forEach(row => {
-            const qtyInput = row.querySelector('.qty-input');
-            if (qtyInput) {
-                const qty = parseInt(qtyInput.value) || 0;
-                if (qty > 0) {
-                    const priceText = row.querySelector('.wholesale').innerText;
-                    const price = parseFloat(priceText.replace(/[^0-9.-]+/g,""));
-                    totalSum += (qty * price);
-                    totalQty += 1;
-                }
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            const input = row.querySelector('.qty-input');
+            const qty = input.value === "" ? 0 : parseInt(input.value);
+            
+            if (qty > 0) {
+                const priceText = row.querySelector('.wholesale').innerText;
+                const price = parseFloat(priceText.replace(/[^0-9.-]+/g,""));
+                totalSum += (qty * price);
+                totalQty += 1;
             }
         });
 
